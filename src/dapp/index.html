@@ -5,9 +5,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
-  <meta name="author" content="">
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <title>FlightSurety DApp</title>
 
 </head>
@@ -31,9 +29,6 @@
           </li>
           <li class="nav-item">
             <a class="nav-link js-scroll-trigger" href="#portfolio">Insurance</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" id="operational"href="#contact">Operational</a>
           </li>
         </ul>
       </div>
@@ -60,18 +55,18 @@
   <section class="page-section bg-primary" id="airplanes">
     <div class="container">
       <div class="row justify-content-center">
-        <div class="col-lg-8 text-center">
-          <h2 class="text-white mt-0">Send <span class="underlined"><span id="fundingPrice" class="underlined"></span> Ethers to Fund Airline Insurance</h2>
+        <div class="col-lg-8 text-center" id="funding-container">
+          <h2 class="text-white mt-0">Send 10 Ethers to Fund Airline Insurance</h2>
           <hr class="divider my-4">
-          <a class="btn btn-light btn-xl js-scroll-trigger" href="#fundAirline">Fund Insurance</a>
+          <button class="btn btn-light btn-xl" type="button" onclick="App.fundAirline()">Fund Insurance</button>
           <hr class="divider my-4">
           <h2 class="text-white mt-0">Enter ETH Address to register new Airline</h2>
           <hr class="divider my-4">
           <div class="wrap-input100 bg1">
             <span class="label-input100">Ethereum Address *</span>
-            <input class="input100" type="text" name="name" placeholder="0x00000000000000000000000000000000000000">
+            <input class="input100" type="text" id="airlineAddress" placeholder="0x00000000000000000000000000000000000000">
           </div>
-          <a class="btn btn-light btn-xl" href="#registerAirline">Register Airline</a>
+          <button class="btn btn-light btn-xl" type="button" onclick="App.registerAirline()">Register Airline</button>
         </div>
       </div>
     </div>
@@ -107,7 +102,7 @@
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8 text-center">
-          <h2 class="text-white mt-0">Select Flight & Purchase Insurance for <span class="underlined"><span id="insurancePrice"></span> ETH</span></h2>
+          <h2 class="text-white mt-0">Select Flight & Purchase Insurance for 1 ETH</span></h2>
           <hr class="divider my-4">
           <div class="wrap-input100 input100-select bg1">
             <span class="label-input100">Select Flights *</span>

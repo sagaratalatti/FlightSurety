@@ -1,185 +1,175 @@
-import DOM from './dom';
-import Contract from './contract';
-import $ from 'jquery';
-window.jQuery = $;
-window.$ = $;
+/* eslint-disable no-console */
+/* eslint-disable no-undef */
 import './assets/css/creative.css';
 import './assets/select2/select2.css';
 import './assets/css/form.css';
-import './assets/bootstrap/bootstrap.bundle.min.js';
-import './assets/jquery-easing/jquery.easing.min.js';
 import './assets/creative.js';
+import contract from 'truffle-contract';
+import Web3 from 'web3'
 import AWN from 'awesome-notifications';
+import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 
+var flightSuretyApp = contract(FlightSuretyApp);
+var flightSuretyData = contract(FlightSuretyData);
 
-(async() => {
+var account;
+var accounts;
 
-    let result = null;
+const App = {
 
-    function getFlights() {
-        (async() => {
-            console.log('updating flights ....');
-            try {
-                let response = await fetch('http://localhost:3000/flights');
-                let flights = await response.json();
-                $("#flightsPurchase").find('option').remove();
-                for (let i=0; i < flights.flightsForPurchase.length; i++) {
-                    let flight = flights.flightsForPurchase[i];
-                    $("#flightsPurchase").append(
-                        new Option(`${flight.flight} ${flight.departure}/${flight.destination}`,
-                            `${flight.airline}-${flight.flight}-${flight.timestamp}`));
-                }
-                $("#ftc-events").find('li').remove();
-                for (let i=0; i < flights.flightsLanded.length; i++) {
-                    let flight = flights.flightsLanded[i];
-                    $("#ftc-events").prepend(`<li class="m-auto">${flight.flight} ${flight.departure}/${flight.destination} ${flight.status_code}</li>`);
-                }
-                $("#ftc-events").prepend('<li><h6 class="text-center">LANDED FLIGHTS</h6></li>');
-            }catch(e) {
-                console.log(e);
+    start : async () => {
+
+        flightSuretyApp.setProvider(web3.currentProvider);
+        flightSuretyData.setProvider(web3.currentProvider);
+
+        web3.eth.getAccounts(function (error, accs) {
+            if (error != null) {
+                alert('There was an error fetching your accounts.')
+                return
+            } if (accs.length === 0) {
+                alert("Couldn't get any accounts! Make sure Ethereum client is configured correctly")
+                return
             }
-        })();
-    }
-    getFlights();
 
-    let contract = new Contract('localhost', () => {
-        // Read transaction
-        contract.isOperational((error, result) => {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log("success");
-            }
+            accounts = accs;
+            account = accounts[0];
         });
 
-        contract.getFundingValue((error, result) => {
-            if (error) {
-                 console.log(error)
-            } else {
-                try {
-                    let fundingValue = $("fundingPrice");
-                    console.log(result.toString());
-                    fundingValue.html(price);
-                }
-                catch (e) {
-                    console.log(e)
-                }
-            }
+        window.ethereum.on('accountsChanged', function (accounts) {
+            account = accounts[0];
+            console.log("Using address: " + accounts[0]);
         });
 
-        contract.getInsuranceCost((error, result) => {
-            if (error) {
-                console.log(error);
-            } else {
-                try {
-                    let insPrice = $("insurancePrice");
-                    insPrice.html(result);
-                    console.log(result);
-                }
-                catch(e) {
-                    console.log(e)
-                }
-            }
-        });
+        const flightApp = await flightSuretyApp.deployed();
+        const flightData = await flightSuretyData.deployed();
 
-        function getBalance() {
-            contract.pendingWithdrawals((error, result) => {
-                let price = 0;
-                if (error) {
-                    console.log(error);
-                }else{
-                    try {
-                        price = web3.utils.fromWei(result, 'ether');
-                    } catch(e) {
-                        console.log(e);
-                    }
-                }
-                let claimAmount = $("#claimAmount");
-                claimAmount.html(price);
-            });
+        var registered = await flightData.hasAirlineRegistered(account);
+
+        console.log('Airline Registered: ' + registered);
+
+        console.log('FlightApp Address: ' + flightApp.address);
+        console.log('FlightData Address: ' + flightData.address);
+
+        if (await flightApp.isOperational({from: account})) {
+            console.log('It is Operational');
+        } else {
+            console.log('Not Operational');
         }
 
-        getBalance();
+        App.getFlights();
+    },
 
+    getFlights : async() => {
+        console.log('updating flights...');
 
+        try {
+            let response = await fetch('http://localhost:3000/flights');
+            let flights = await response.json();
+            const flightsPurchase = document.getElementById('flightsPurchase');
 
-        DOM.elid('#registerAirline').addEventListener('click', () => {
-            const airline = $("#newAirline").val();
-            if (airline) {
-                contract.registerAirline(airline, (error, result) => {
-                    console.log(error, result);
-                });
-            } else {
-                alert("You need to insert an airline address");
+            for (let i=0; i < flights.flightsForPurchase.length; i++) {
+                let flight = flights.flightsForPurchase[i];
+                flightsPurchase.append(
+                    new Option(`${flight.flight} ${flight.departure}/${flight.destination}`,
+                    `${flight.airline}-${flight.flight}-${flight.timestamp}`)
+                )
             }
 
-        });
+            for (let i = 0; i < flights.flightsLanded.length; i++) {
+                let flight = flights.flightsLanded[i];
 
-        DOM.elid('#fundAirline').addEventListener('click', () => {
-            contract.fundAirline((error, result) => {
-                console.log(error, result);
-            });
-        });
-
-        DOM.elid('#registerFlight').addEventListener('click', () => {
-            const flightNumber = $("#flightNumber").val();
-            const departure = $("#departure").val();
-            const destination = $("#destination").val();
-            if (flightNumber && departure && destination) {
-                contract.registerFlight(flightNumber, departure, destination, (error, result) => {
-                    console.log(error, result);
-                });
-            } else {
-                alert("Make sure to insert a flight number, departure and destination");
             }
-        });
+        } catch (error) {
+            console.log(error);
+        }
+    },
 
-        DOM.elid('#purchaseInsurance').addEventListener('click', () => {
-            try {
-                let data = $("#flightsPurchase").val().split('-');
-                if (data.length === 3) {
-                    contract.buyInsurance(data[0], data[1], data[2], (error, result) => {
-                        console.log(error, result);
-                     });
-                }
-            }catch(e){
-                console.log("Invalid data");
-            }
-        });
+    getBalance : async() => {
+        const flightData = await flightSuretyData.deployed();
+        document.getElementById('claimAmount').value = web3.utils.fromWei(flightData.pendingWithdrawals(account), {from: account});
+    },
 
-        DOM.elid('#refreshFlights').addEventListener('click', () => {
-            console.log('reloading flights list');
-            getFlights();
-        });
+    fundAirline : async() => {
+        const flightApp = await flightSuretyApp.deployed();
+        await flightApp.fundAirline({from: account, value: web3.utils.toWei('10', 'ether'), gas: 3000000});
+    },
 
-        DOM.elid('claim').addEventListener('click', () => {
-            let self = this;
-            contract.pay((error, result) => {
-                console.log(error, result);
-                getBalance();
-            });
-        });
+    registerAirline : async() => {
+        const flightApp = await flightSuretyApp.deployed();
 
-        DOM.elid('balance').addEventListener('click', () => {
-            getBalance();
-        })
+        const airline = document.getElementById('airlineAddress').value;
+
+        await flightApp.registerAirline(airline, {from: account});
+    },
+
+    registerFlight : async() => {
+        const flightApp = await flightSuretyApp.deployed();
+        const timestamp = Math.floor(Date.now() / 1000);
+
+        const flightNumber = document.getElementById('flightNumber').value;
+        const departure = document.getElementById('Departure').value;
+        const destination = document.getElementById('Destination').value;
+
+        await flightApp.registerFlight(flightNumber, timestamp, departure, destination, {from: account});
+    },
+
+    buyInsurance : async() => {
+        const flightApp = await flightSuretyApp.deployed();
+        let insuranceValue = flightApp.INSURANCE_COST();
+
+        flightApp.buy(airline, flight, timestamp, {from: account, value: insuranceValue.toString(), gas: 3000000});
+    },
+
+    fetchFlightStatus : async() => {
+        const flightApp = await flightSuretyApp.deployed();
+
+        flightApp.fetchFlightStatus(airline, flight, timestamp, {from: account});
+    },
+
+    pay : async() => {
+        const flightApp = await flightSuretyApp.deployed();
+
+        flightApp.pay({from: account, gas: 3000000});
+    },
+
+    balance : async() => {
+        const flightData = await flightSuretyData.deployed();
+        web3.eth.getBalance(flightData.address);
+    }
+
+}
+
+window.App = App;
+
+window.addEventListener('load', async() => {
+    if (window.ethereum) {
+        window.web3 = new Web3(ethereum);
+        try {
+            await ethereum.enable();
+            console.log(window.web3.isConnected())
+        } catch (error){
+            alert('User has denied access to ethereum');
+        }
+    } else if (window.web3) {
+        window.web3 = new Web3(web3.currentProvider);
+        console.log(web3.isConnected())
+    } else {
+        console.warn(
+            'No web3 detected. Falling back to http://127.0.0.1:7545.' +
+            ' You should remove this fallback when you deploy live, as it\'s inherently insecure.' +
+            ' Consider switching to Metamask for development.' +
+            ' More info here: http://truffleframework.com/tutorials/truffle-and-metamask'
+        )
+
+        window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'))
+        console.log(web3.isConnected())
+    }
+
+    App.start();
+});
 
 
-        DOM.elid('#flightStatus').addEventListener('click', () => {
-            try {
-                let data = $("#flightsPurchase").val().split('-');
-                if (data.length === 3) {
-                    contract.fetchFlightStatus(data[0], data[1], data[2], (error, result) => {
-                        console.log(error, result);
-                    });
-                }
-            }catch(e){
-                console.log("Invalid data");
-            }
-        });
-    });
-
-})();
 
 
 

@@ -1,5 +1,6 @@
-const FlightSuretyApp = artifacts.require("FlightSuretyApp");
-const FlightSuretyData = artifacts.require("FlightSuretyData");
+/* eslint-disable no-undef */
+const FlightSuretyApp = artifacts.require("../contracts/FlightSuretyApp.sol");
+const FlightSuretyData = artifacts.require("../contracts/FlightSuretyData.sol");
 const fs = require('fs');
 
 module.exports = function(deployer) {
@@ -12,7 +13,7 @@ module.exports = function(deployer) {
                 .then(() => {
                     let config = {
                         localhost: {
-                            url: 'http://localhost:7545',
+                            url: 'http://127.0.0.1:7545',
                             dataAddress: FlightSuretyData.address,
                             appAddress: FlightSuretyApp.address,
                             numOracles: 50,

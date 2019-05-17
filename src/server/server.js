@@ -1,20 +1,19 @@
+import "@babel/polyfill";
+
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
-import Config from './config.json';
+import contract from 'truffle-contract';
 import Web3 from 'web3';
 import express from 'express';
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
 
-
-let config = Config['localhost'];
-let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
+let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
 const accounts = web3.eth.getAccounts();
 web3.eth.defaultAccount = "0x55690752ed06B1d37510D20B3516b2D12F007f6d";
-let flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
-let flightSuretyData = new web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
-
+let flightSuretyApp = contract(FlightSuretyApp);
+let flightSuretyData = contract(FlightSuretyData);
 
 class ContractServer {
 
@@ -27,32 +26,40 @@ class ContractServer {
 
   init = async () => {
 
+    flightSuretyApp.setProvider(web3.currentProvider);
+    flightSuretyData.setProvider(web3.currentProvider);
+
+
+
     try {
-      const address = flightSuretyApp.address;
+      const flightApp = await flightSuretyApp.deployed();
+      const flightData = await flightSuretyData.deployed();
+      const address = flightApp.address;
       const accs = await accounts;
-      await flightSuretyData.methods.authorizeCaller(address).send({from: accs[0]});
-    } catch(error) {
+      await flightData.authorizeCaller(address, {from: accs[0]});
+      console.log(accs[0])
+    } catch (error) {
       console.log(error.toString());
       console.error('Check if Ganache is running and contracts deployed properly!');
       process.exit();
     }
 
     this.registerOracles();
-    this.listenEvents();
     this.getRegisteredFlights();
   }
 
   registerOracles = async () => {
+    const flightApp = await flightSuretyApp.deployed();
     let self = this;
-    const fee = await flightSuretyApp.methods.REGISTRATION_FEE().call();
+    const fee = await flightApp.REGISTRATION_FEE();
     const accs = await accounts;
 
-    const numOracles = config.numOracles < accs.length ? config.numOracles : (accs.length - 1)
+    const numOracles = 50 < accs.length ? 50 : (accs.length - 1)
 
     for (var i = 1; i < numOracles; i++) {
       try {
         self.oracles.push(accs[i]);
-        await flightSuretyApp.methods.registerOracle().send({
+        await flightApp.registerOracle({
           from: accs[i], value: fee, gas: 3000000
       });
 
@@ -63,17 +70,17 @@ class ContractServer {
   }
 
   submitOracleResponse = async(airline, flight, timestamp) => {
+    const flightApp = await flightSuretyApp.deployed();
 
     for (let i = 0; i < this.oracles.length; i++) {
       const statusCode = this.status[Math.floor(Math.random() * this.status.length)];
 
       try {
-        let idxs = await flightSuretyApp.methods.getMyIndexes().call({from: this.oracles[i]});
+        let idxs = await flightApp.getMyIndexes({from: this.oracles[i]});
 
         for(let y = 0; y < idxs.length; y++) {
           try {
-            await flightSuretyApp.methods.submitOracleResponse(idxs[y], airline, flight, timestamp, statusCode)
-                                         .send({from: this.oracles[i], gas: 3000000});
+            await flightApp.submitOracleResponse(idxs[y], airline, flight, timestamp, statusCode, {from: this.oracles[i], gas: 3000000});
           } catch (error) {
             console.log(error.toString());
           }
@@ -85,17 +92,18 @@ class ContractServer {
   }
 
   getRegisteredFlights = async () => {
+    const flightData = await flightSuretyData.deployed();
     let self = this;
-    const numRegisteredFlights = await flightSuretyData.methods.registeredFlights().call();
-    console.log('${numRegisteredFlights} registered flights');
+    const numRegisteredFlights = await flightData.getRegisteredFlights();
+    console.log(numRegisteredFlights + ' registered flights');
 
     self.flightsForPurchase = [];
     self.flightsLanded = [];
 
     for (let i = 0; i < parseInt(numRegisteredFlights); i++) {
       try {
-        let flightKey = await flightSuretyData.methods.getFlightKeyIndex(i).call();
-        let flight = await flightSuretyData.methods.flights(flightKey).call();
+        let flightKey = await flightData.getFlightKeyIndex(i);
+        let flight = await flightData.flights(flightKey);
         flight.flightKey = flightKey;
         if (flight.statusCode === "0") {
           self.flightsForPurchase.push(flight);
@@ -106,54 +114,6 @@ class ContractServer {
         console.log(e);
       }
     }
-  }
-
-  listenEvents = async () => {
-    let self = this;
-
-    flightSuretyApp.events.OracleReport({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('OracleReport: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-    });
-
-    flightSuretyApp.events.OracleRequest({}, async (error, event) => {
-      if (error) console.log(error);
-      console.log('OracleRequest: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-      const {airline, flight, timestamp} = event.returnValues;
-      await self.submitOracleResponse(airline, flight, timestamp);
-    });
-
-    flightSuretyApp.events.FlightStatusInfo({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('FlightStatusInfo: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-    });
-
-    flightSuretyData.events.AirlineFunded({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('AirlineFunded: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-    });
-
-    flightSuretyData.events.FlightRegistered({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('FlightRegistered: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-      self.getRegisteredFlights();
-    });
-
-    flightSuretyData.events.PassengerInsured({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('PassengerInsured: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-    });
-
-    flightSuretyData.events.FlightStatusUpdated({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('FlightStatusUpdated: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-      self.getRegisteredFlights();
-    });
-
-    flightSuretyData.events.AccountWithdrawal({}, function (error, event) {
-      if (error) console.log(error);
-      console.log('AccountWithdrawal: ' + '/n' + event.returnValues + '/n' + '-----------------------');
-    });
   }
 }
 

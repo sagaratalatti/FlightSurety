@@ -59,7 +59,7 @@ contract FlightSuretyApp {
     }
 
     modifier requireRegisteredAirline(address airline) {
-        require(flightSuretyData.isAirlineRegistered(airline), "Sender is not registered airline");
+        require(flightSuretyData.hasAirlineRegistered(airline), "Sender is not registered airline");
         _;
     }
 
@@ -83,12 +83,12 @@ contract FlightSuretyApp {
     }
 
     modifier airlineIsFunded(address airline) {
-        require(flightSuretyData.isAirlineFunded(airline), "Airline is not funded!");
+        require(flightSuretyData.hasAirlineFunded(airline), "Airline is not funded!");
         _;
     }
 
     modifier airlineIsNotRegistered(address airline) {
-        require(!flightSuretyData.isAirlineRegistered(airline), "Airline has already registered!");
+        require(!flightSuretyData.hasAirlineRegistered(airline), "Airline has already registered!");
         _;
     }
 
@@ -98,17 +98,17 @@ contract FlightSuretyApp {
     }
 
     modifier flightIsNotRegistered(bytes32 flightKey) {
-        require(!flightSuretyData.isFlightRegistered(flightKey), "Flight is already registered!");
+        require(!flightSuretyData.hasFlightRegistered(flightKey), "Flight is already registered!");
         _;
     }
 
     modifier flightIsRegistered(bytes32 flightKey) {
-        require(!flightSuretyData.isFlightRegistered(flightKey), "Flight is not registered!");
+        require(!flightSuretyData.hasFlightRegistered(flightKey), "Flight is not registered!");
         _;
     }
 
     modifier flightIsNotLanded(bytes32 flightKey) {
-        require(!flightSuretyData.isFlightLanded(flightKey));
+        require(!flightSuretyData.hasFlightLanded(flightKey));
         _;
     }
 
@@ -135,7 +135,7 @@ contract FlightSuretyApp {
 
     function isFlightRegistered(address airline, string memory flight, uint256 timestamp) public view returns (bool) {
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
-        return flightSuretyData.isFlightRegistered(flightKey);
+        return flightSuretyData.hasFlightRegistered(flightKey);
     }
 
     function isPassengerInsuredForFlight(address airline, string memory flight, uint256 timestamp, address passenger) public view returns (bool) {
@@ -353,15 +353,15 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function isOperational() public view returns(bool);
-    function isAirlineFunded(address airline) external view returns (bool);
-    function isAirlineRegistered(address airline) external view returns (bool);
+    function hasAirlineFunded(address airline) external view returns (bool);
+    function hasAirlineRegistered(address airline) external view returns (bool);
     function registerAirline(address newAirline, address registeredAirline) external;
     function fundAirline(address airline) payable external;
     function getRegisteredAirlines() public view returns (uint256);
     function isPassengerInsured(bytes32 flightKey, address passenger) external view returns (bool);
     function registerFlight(bytes32 flightKey, address airline, string calldata flight, uint256 timestamp, string calldata departure, string calldata destination) external;
-    function isFlightRegistered(bytes32 flightKey) public view returns (bool);
-    function isFlightLanded(bytes32 flightKey) public view returns (bool);
+    function hasFlightRegistered(bytes32 flightKey) public view returns (bool);
+    function hasFlightLanded(bytes32 flightKey) public view returns (bool);
     function buy(bytes32 flightKey, address passenger, uint256 amount, uint256 multiplier) external payable;
     function updateFlightStatus(bytes32 flightKey, uint8 statusCode) external;
     function pay(address caller) external;
