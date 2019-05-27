@@ -28,7 +28,7 @@ To view dapp:
 `http://localhost:8000`
 
 ## Develop Server
-
+Edit airline in `2_deploy_contract.js`
 `npm run server`
 `truffle test ./test/oracles.js`
 `truffle test ./test/flightSurety.js
