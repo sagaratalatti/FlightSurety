@@ -1,15 +1,15 @@
-import "@babel/polyfill";
-
+import 'babel-polyfill';
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 import contract from 'truffle-contract';
+import truffleAssert from 'truffle-assertions';
 import Web3 from 'web3';
 import express from 'express';
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
 
-let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
+let web3 = new Web3(new Web3.providers.WebsocketProvider('ws://127.0.0.1:7545'));
 const accounts = web3.eth.getAccounts();
 web3.eth.defaultAccount = "0x55690752ed06B1d37510D20B3516b2D12F007f6d";
 let flightSuretyApp = contract(FlightSuretyApp);
@@ -21,7 +21,7 @@ class ContractServer {
     this.flightsForPurchase = [];
     this.flightsLanded = [];
     this.oracles = [];
-    this.status = [20, 30, 40, 50, 0];
+    this.status = [10, 20, 30, 40, 50, 0];
   }
 
   init = async () => {
@@ -46,6 +46,7 @@ class ContractServer {
 
     this.registerOracles();
     this.getRegisteredFlights();
+    this.watchEvents();
   }
 
   registerOracles = async () => {
@@ -74,7 +75,7 @@ class ContractServer {
 
     for (let i = 0; i < this.oracles.length; i++) {
       const statusCode = this.status[Math.floor(Math.random() * this.status.length)];
-
+      console.log('random statusCode: ' + statusCode);
       try {
         let idxs = await flightApp.getMyIndexes({from: this.oracles[i]});
 
@@ -105,15 +106,26 @@ class ContractServer {
         let flightKey = await flightData.getFlightKeyIndex(i);
         let flight = await flightData.flights(flightKey);
         flight.flightKey = flightKey;
-        if (flight.statusCode === "0") {
-          self.flightsForPurchase.push(flight);
-        } else {
+        console.log('Status Code from Contract: ' + flight.statusCode);
+        if (flight.statusCode != 0) {
+          console.log('Flights for Landed: ');
           self.flightsLanded.push(flight);
+        } else {
+          console.log('Flights Purchase: ');
+          self.flightsForPurchase.push(flight);
         }
       } catch (error) {
         console.log(e);
       }
     }
+  }
+
+  watchEvents = async() =>{
+    const flightApp = await flightSuretyApp.deployed();
+    let oracleReportEvent = await flightApp.OracleReport();
+        oracleReportEvent.on("data", function(data) {
+          submitOracleResponse(data.args.airline, data.args.flight, data.args.timestamp);
+        })
   }
 }
 

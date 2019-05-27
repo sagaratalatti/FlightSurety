@@ -17,7 +17,7 @@ contract FlightSuretyData {
         string flight;
         string departure;
         string destination;
-        uint timestamp;
+        string timestamp;
         uint8 statusCode;
     }
 
@@ -212,7 +212,8 @@ contract FlightSuretyData {
     *
     */
 
-    function fundAirline(address airline) payable external requireIsOperational isAuthorizedCaller {
+    function fundAirline(address airline) external payable requireIsOperational isAuthorizedCaller {
+        address(0).transfer(msg.value);
         airlines[airline].isFunded = true;
         emit AirlineFunded(airline);
     }  
@@ -223,7 +224,7 @@ contract FlightSuretyData {
             emit AirlineRegistered(airline);
     }
 
-    function registerFlight(bytes32 flightKey, address airline, string memory flight, uint256 timestamp, string memory departure, string memory destination) public payable requireIsOperational isAuthorizedCaller isAirlineFunded(airline) isFlightNotRegistered(flightKey) {
+    function registerFlight(bytes32 flightKey, address airline, string memory flight, string memory timestamp, string memory departure, string memory destination) public payable requireIsOperational isAuthorizedCaller isAirlineFunded(airline) isFlightNotRegistered(flightKey) {
         flights[flightKey] = Flight(
             true,
             airline,
@@ -252,7 +253,8 @@ contract FlightSuretyData {
     * @dev Buy insurance for a flight
     *
     */   
-    function buy(bytes32 flightKey, address passenger, uint256 amount, uint256 multiplier) external requireIsOperational isAuthorizedCaller isFlightRegistered(flightKey) isFlightNotLanded(flightKey) {
+    function buy(bytes32 flightKey, address passenger, uint256 amount, uint256 multiplier) external payable requireIsOperational isAuthorizedCaller isFlightRegistered(flightKey) isFlightNotLanded(flightKey) {
+        address(0).transfer(msg.value);
         flightInsuredPassengers[flightKey].push(InsuredData(
             passenger,
             amount,
@@ -295,7 +297,7 @@ contract FlightSuretyData {
         emit AccountWithdrawal(caller, amount);
     }
 
-    function getFlightKey(address airline, string memory flight, uint256 timestamp) pure internal returns(bytes32) {
+    function getFlightKey(address airline, string memory flight, string memory timestamp) pure internal returns(bytes32) {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 

@@ -80,20 +80,20 @@
 
       <div class="wrap-input100 bg1">
         <span class="label-input100">Flight Number *</span>
-        <input class="input100" type="text" name="name" placeholder="MH220">
+        <input class="input100" type="text" id="flightNumber" placeholder="MH220">
       </div>
 
       <div class="wrap-input100 bg1 rs1-wrap-input100">
         <span class="label-input100">Departure *</span>
-        <input class="input100" type="text" name="city" placeholder="Maharashtra">
+        <input class="input100" type="text" id="departure" placeholder="Maharashtra">
       </div>
 
       <div class="wrap-input100 bg1 rs1-wrap-input100">
         <span class="label-input100">Destination *</span>
-        <input class="input100" type="text" name="city" placeholder="Delhi">
+        <input class="input100" type="text" id="destination" placeholder="Delhi">
       </div>
 
-      <a class="btn btn-primary btn-xl" href="#registerFlight">Register Flight</a>
+      <button class="btn btn-primary btn-xl" type="button" onclick="App.registerFlight()">Register Flight</b>
     </div>
   </section>
 
@@ -107,15 +107,14 @@
           <div class="wrap-input100 input100-select bg1">
             <span class="label-input100">Select Flights *</span>
             <div>
-              <select class="js-select2" id="flightsPurchase">
+              <select class="form-control" id="flightsPurchase">
                   <option>Select Flight</option>
               </select>
-              <div class="dropDownSelect2"></div>
             </div>
           </div>
-          <a class="btn btn-light btn-xl js-scroll-trigger" href="#refreshFlights">Fetch Flights</a>
-          <a class="btn btn-light btn-xl js-scroll-trigger" href="#purchaseInsurance">Purchase Insurance</a>
-          <a class="btn btn-light btn-xl js-scroll-trigger" href="#flightStatus">Flight Status</a>
+          <button class="btn btn-light btn-xl" type="button" onclick="App.getFlights()">Fetch Flights</button>
+          <button class="btn btn-light btn-xl" type="button" onclick="App.buyInsurance()">Purchase Insurance</button>
+          <button class="btn btn-light btn-xl" type="button" onclick="App.fetchFlightStatus()">Flight Status</button>
         </div>
       </div>
     </div>
@@ -124,9 +123,9 @@
   <!-- Call to Action Section -->
   <section class="page-section bg-dark text-white">
     <div class="container text-center">
-      <h2 class="mb-4">INSURANCE PREMIUM YOU CAN CLAIM <span class="underlined"><span id="claimAmount"></span> ETH</span></h2>
-      <a class="btn btn-light btn-xl" href="#update-balance">Update Balance!</a>
-      <a class="btn btn-light btn-xl" href="#claim-premium">Claim Premium!</a>
+      <h2 class="mb-4">CHECK INSURANCE PREMIUM YOU CAN CLAIM</h2>
+      <button class="btn btn-light btn-xl" type="button" onclick="App.getBalance()">Update Balance!</button>
+      <button class="btn btn-light btn-xl" type="button" onclick="App.pay()">Claim Premium!</button>
     </div>
   </section>
 

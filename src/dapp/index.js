@@ -7,6 +7,9 @@ import './assets/creative.js';
 import contract from 'truffle-contract';
 import Web3 from 'web3'
 import AWN from 'awesome-notifications';
+import 'awesome-notifications/dist/index.js';
+import 'awesome-notifications/dist/style.css';
+import bigNumber from 'bignumber.js';
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 
@@ -42,26 +45,16 @@ const App = {
         });
 
         const flightApp = await flightSuretyApp.deployed();
-        const flightData = await flightSuretyData.deployed();
-
-        var registered = await flightData.hasAirlineRegistered(account);
-
-        console.log('Airline Registered: ' + registered);
-
-        console.log('FlightApp Address: ' + flightApp.address);
-        console.log('FlightData Address: ' + flightData.address);
 
         if (await flightApp.isOperational({from: account})) {
-            console.log('It is Operational');
+            new AWN().success('FlightSurety is Operational', {durations: {success: 5000 }});
         } else {
-            console.log('Not Operational');
+            new AWN().alert('FlightSurety is not Operational', {durations: {alert: 5000 }});
         }
-
-        App.getFlights();
     },
 
     getFlights : async() => {
-        console.log('updating flights...');
+        new AWN().info("Updating Flights...", {durations: {info: 5000 }, labels: {info: 'Requesting Flights'}});
 
         try {
             let response = await fetch('http://localhost:3000/flights');
@@ -70,15 +63,17 @@ const App = {
 
             for (let i=0; i < flights.flightsForPurchase.length; i++) {
                 let flight = flights.flightsForPurchase[i];
-                flightsPurchase.append(
-                    new Option(`${flight.flight} ${flight.departure}/${flight.destination}`,
-                    `${flight.airline}-${flight.flight}-${flight.timestamp}`)
-                )
+                console.log(flight);
+                var options = document.createElement('option');
+                
+                options.appendChild(document.createTextNode(`${flight.flight} ${flight.departure}/${flight.destination}`))
+                options.value = `${flight.airline}-${flight.flight}-${flight.timestamp}-${flight.flightKey}`;
+                flightsPurchase.appendChild(options);
             }
-
+            
             for (let i = 0; i < flights.flightsLanded.length; i++) {
                 let flight = flights.flightsLanded[i];
-
+                new AWN().info(`${flight.flight} | ${flight.departure} | ${flight.destination} ${flight.statusCode}`, {durations: {info: 5000 }, labels: {info: 'Flights Landed'}});
             }
         } catch (error) {
             console.log(error);
@@ -87,7 +82,9 @@ const App = {
 
     getBalance : async() => {
         const flightData = await flightSuretyData.deployed();
-        document.getElementById('claimAmount').value = web3.utils.fromWei(flightData.pendingWithdrawals(account), {from: account});
+        let balance = await flightData.pendingWithdrawals(account, {from: account});
+        new AWN().info(web3.utils.fromWei(balance).toString() + " ETH", {durations: {info: 5000 }, labels: {info: 'Insurance Claim'}});
+        console.log(web3.utils.fromWei(balance));
     },
 
     fundAirline : async() => {
@@ -96,46 +93,46 @@ const App = {
     },
 
     registerAirline : async() => {
-        const flightApp = await flightSuretyApp.deployed();
-
         const airline = document.getElementById('airlineAddress').value;
-
-        await flightApp.registerAirline(airline, {from: account});
+        accounts[1] = airline.toString();
+        console.log('Airline Address: ' + accounts[1]);
+        const flightApp = await flightSuretyApp.deployed();
+        await flightApp.registerAirline(accounts[1], {from: account});
     },
 
     registerFlight : async() => {
         const flightApp = await flightSuretyApp.deployed();
         const timestamp = Math.floor(Date.now() / 1000);
-
+        console.log('Flight Timestamp ' + timestamp);
         const flightNumber = document.getElementById('flightNumber').value;
-        const departure = document.getElementById('Departure').value;
-        const destination = document.getElementById('Destination').value;
+        const departure = document.getElementById('departure').value;
+        const destination = document.getElementById('destination').value;
 
-        await flightApp.registerFlight(flightNumber, timestamp, departure, destination, {from: account});
+        await flightApp.registerFlight(flightNumber, timestamp.toString(), departure, destination, {from: account});
     },
 
     buyInsurance : async() => {
         const flightApp = await flightSuretyApp.deployed();
-        let insuranceValue = flightApp.INSURANCE_COST();
-
-        flightApp.buy(airline, flight, timestamp, {from: account, value: insuranceValue.toString(), gas: 3000000});
+        const flightData = document.getElementById('flightsPurchase').value.split('-');
+        if (flightData.length === 4) {
+            flightApp.buyInsurance(flightData[0], flightData[1], flightData[2], flightData[3], {from: account, value:  web3.utils.toWei('1', 'ether'), gas: 3000000});
+        }   
     },
 
     fetchFlightStatus : async() => {
         const flightApp = await flightSuretyApp.deployed();
-
-        flightApp.fetchFlightStatus(airline, flight, timestamp, {from: account});
+        const flightData = document.getElementById('flightsPurchase').value.split('-');
+        if (flightData === 3) {
+            flightApp.fetchFlightStatus(flightData[0], flightData[1], flightData[2], {from: account});
+        }
+        
     },
 
     pay : async() => {
+
         const flightApp = await flightSuretyApp.deployed();
 
         flightApp.pay({from: account, gas: 3000000});
-    },
-
-    balance : async() => {
-        const flightData = await flightSuretyData.deployed();
-        web3.eth.getBalance(flightData.address);
     }
 
 }
