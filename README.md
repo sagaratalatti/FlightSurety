@@ -1,6 +1,6 @@
 # FlightSurety
 
-FlightSurety is a sample application project for Udacity's Blockchain course.
+FlightSurety is an Airline & Insurance Management DApp.
 
 ## Install
 
@@ -28,9 +28,11 @@ To view dapp:
 `http://localhost:8000`
 
 ## Develop Server
+Edit airline in `2_deploy_contract.js`
 
 `npm run server`
 `truffle test ./test/oracles.js`
+`truffle test ./test/flightSurety.js
 
 ## Deploy
 
@@ -38,6 +40,10 @@ To build dapp for prod:
 `npm run dapp:prod`
 
 Deploy the contents of the ./dapp folder
+
+## DApp Screenshot
+
+![FlightSurety DApp](https://i.imgur.com/a7JHfSl.png)
 
 
 ## Resources
