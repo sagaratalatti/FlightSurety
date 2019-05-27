@@ -29,6 +29,7 @@ To view dapp:
 
 ## Develop Server
 Edit airline in `2_deploy_contract.js`
+
 `npm run server`
 `truffle test ./test/oracles.js`
 `truffle test ./test/flightSurety.js
@@ -43,13 +44,6 @@ Deploy the contents of the ./dapp folder
 ## DApp Screenshot
 
 ![FlightSurety DApp](https://i.imgur.com/a7JHfSl.png)
-
-# Contract Deployed to Rinkeby Testnet
-
-| Contract             | Address on Rinkeby test network                                    | 
-|----------------------|--------------------------------------------------------------------|
-| FlightSuretyData     | 0x0600B30dC5dCdB58CD8C47976c5b19409eDD88BA                         |
-| FlightSuretyApp      | 0x04a382CF4b9EA08610413b2bA608ed11312DafBc                         |
 
 
 ## Resources
