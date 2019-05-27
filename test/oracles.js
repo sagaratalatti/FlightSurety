@@ -52,7 +52,7 @@ contract('Oracles', async (accounts) => {
     let timestamp = Math.floor(Date.now() / 1000);
 
     try {
-      await config.flightSuretyApp.registerFlight(flight, timestamp, "Maharashtra", "Pune", {from: config.firstAirline});
+      await config.flightSuretyApp.registerFlight(flight, timestamp.toString(), "Maharashtra", "Pune", {from: config.firstAirline});
     } catch (e) {
       console.log(e.toString());
     }
