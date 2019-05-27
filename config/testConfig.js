@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 
 var FlightSuretyApp = artifacts.require("FlightSuretyApp");
 var FlightSuretyData = artifacts.require("FlightSuretyData");

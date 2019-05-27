@@ -46,6 +46,7 @@
     "awesome-notifications": "^3.0.1",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
+    "file-system": "^2.2.2",
     "font-awesome": "^4.7.0",
     "jquery": "^3.4.0",
     "openzeppelin-solidity": "^2.2.0",
