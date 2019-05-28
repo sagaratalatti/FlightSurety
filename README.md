@@ -34,7 +34,7 @@ Edit airlineAddress in `2_deploy_contract.js`
 
 ## Project Tests
 
-Change the addresses array in TestConfig.js to the addresses available on your Ganache Platforms
+Change the addresses array in /config/TestConfig.js to the addresses available on your Ganache Platforms
 
 `truffle test ./test/oracles.js`
 `truffle test ./test/flightSurety.js
