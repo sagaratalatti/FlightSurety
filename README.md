@@ -31,8 +31,19 @@ To view dapp:
 Edit airlineAddress in `2_deploy_contract.js`
 
 `npm run server`
+
+## Project Tests
+
 `truffle test ./test/oracles.js`
 `truffle test ./test/flightSurety.js
+
+- FlightSuretyTest
+![FlightSurety Tests](https://i.imgur.com/Mgrau5A.png)
+
+- Oracles Test
+
+![FlightSurety Tests](https://i.imgur.com/fVLT8PH.png)
+
 
 ## Deploy
 
