@@ -11,7 +11,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 7545,
       network_id: "5777", // Match any network id
-      from: "0x55690752ed06B1d37510D20B3516b2D12F007f6d"
+      from: "0xee379de94B26a8843d3502Bf2854d6F1eaE1ed8E",
     },
 
     rinkeby: {

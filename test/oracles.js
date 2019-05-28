@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-console */
 
 var Test = require('../config/testConfig.js');
 const truffleAssert = require('truffle-assertions');
@@ -52,13 +54,13 @@ contract('Oracles', async (accounts) => {
     let timestamp = Math.floor(Date.now() / 1000);
 
     try {
-      await config.flightSuretyApp.registerFlight(flight, timestamp, "Maharashtra", "Pune", {from: config.firstAirline});
+      await config.flightSuretyApp.registerFlight(flight, timestamp.toString(), "Maharashtra", "Pune", {from: config.firstAirline});
     } catch (e) {
       console.log(e.toString());
     }
 
     // Submit a request for oracles to get status information for a flight
-    let resStatus = await config.flightSuretyApp.fetchFlightStatus(config.firstAirline, flight, timestamp);
+    let resStatus = await config.flightSuretyApp.fetchFlightStatus(config.firstAirline, flight, timestamp.toString());
     // ACT
     try {
       truffleAssert.eventEmitted(resStatus, 'OracleRequest', (ev) => {
@@ -80,7 +82,7 @@ contract('Oracles', async (accounts) => {
 
         try {
           // Submit a response...it will only be accepted if there is an Index match
-          let response = await config.flightSuretyApp.submitOracleResponse(oracleIndexes[idx], config.firstAirline, flight, timestamp, STATUS_CODE_ON_TIME, { from: accounts[a] });
+          let response = await config.flightSuretyApp.submitOracleResponse(oracleIndexes[idx], config.firstAirline, flight, timestamp.toString(), STATUS_CODE_ON_TIME, { from: accounts[a] });
 
           try {
             truffleAssert.eventEmitted(response, 'OracleReport', (ev) => {
@@ -109,7 +111,6 @@ contract('Oracles', async (accounts) => {
           }
 
         } catch(e) {
-          // Enable this when debugging
            console.log('\nError', idx, oracleIndexes[idx].toNumber(), flight, timestamp);
         }
 
