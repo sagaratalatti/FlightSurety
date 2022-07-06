@@ -51,7 +51,7 @@
     "jquery": "^3.4.0",
     "openzeppelin-solidity": "^2.2.0",
     "sass-loader": "^7.1.0",
-    "select2": "^4.0.6-rc.1",
+    "select2": "^4.0.6",
     "solc": "^0.5.6",
     "truffle-assertions": "^0.8.2",
     "truffle-contract": "^4.0.15",
